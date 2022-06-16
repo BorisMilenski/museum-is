@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import javax.swing.text.html.Option;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,29 +36,47 @@ public class PositionDaoImpl extends GenericDaoImpl<Position>{
     }
 
     @Override
-    public Position create(Position position) {
-        return null;
-    }
-
-    @Override
-    public int update(Position position) {
+    public Position create(Position position){
         String sql = "" +
                 "INSERT INTO position (" +
-                " UUID_TO_BIN(id_position), " +
+                " id_position, " +
                 " base_pay, " +
                 " days_off, " +
                 " base_workload, " +
-                " description " +
+                " description, " +
                 " name) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
-        return jdbcTemplate.update(
+                "VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?)";
+        jdbcTemplate.update(
                 sql,
-                position.getId(),
+                position.getId().toString(),
                 position.getBasePay(),
                 position.getDaysOff(),
                 position.getWorkHoursPerWeek(),
                 position.getDescription(),
                 position.getName()
+        );
+        return position;
+    }
+
+    @Override
+    public int update(Position position) {
+        String sql = "" +
+                "UPDATE position " +
+                "SET " +
+                "base_pay = ?, " +
+                "days_off = ?, " +
+                "base_workload = ?, " +
+                "description = ?, " +
+                "name  = ?" +
+                "WHERE id_position = UUID_TO_BIN( ? )";
+        return jdbcTemplate.update(
+                sql,
+                position.getBasePay(),
+                position.getDaysOff(),
+                position.getWorkHoursPerWeek(),
+                position.getDescription(),
+                position.getName(),
+                position.getId()
         );
     }
 
