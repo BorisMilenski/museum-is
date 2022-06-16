@@ -20,7 +20,7 @@ public class PositionDaoImpl extends GenericDaoImpl<Position>{
     @Override
     String selectSingleInstanceSQL() {
         return  selectAllInstancesSQL() +
-                " WHERE BIN_TO_UUID(id_position) = ? ";
+                " WHERE id_position = UUID_TO_BIN(?) ";
     }
     @Override
     String selectAllInstancesSQL() {

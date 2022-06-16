@@ -18,7 +18,7 @@ public abstract class GenericDaoImpl<T> implements GenericDao<T>, DBToClassMappe
         String selectQuery =  selectSingleInstanceSQL();
         return jdbcTemplate.query(
                 selectQuery,
-                new Object[]{id},
+                new Object[]{id.toString()},
                 this.map()
         ).stream().findFirst();
     }

@@ -18,7 +18,7 @@ public class EmployeeDaoImpl extends GenericDaoImpl<Employee>{
     @Override
     String selectSingleInstanceSQL() {
         return  selectAllInstancesSQL() +
-                "WHERE BIN_TO_UUID(id_employee) = ?" ;
+                "WHERE id_employee = UUID_TO_BIN(?)" ;
     }
 
     @Override
@@ -35,7 +35,7 @@ public class EmployeeDaoImpl extends GenericDaoImpl<Employee>{
                 "p.name " +
                 "FROM employees AS e " +
                 "LEFT JOIN position AS p " +
-                "ON position_id=id_position";
+                "ON position_id=id_position ";
     }
 
     @Override
