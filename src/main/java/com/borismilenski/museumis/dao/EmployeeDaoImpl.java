@@ -56,7 +56,7 @@ public class EmployeeDaoImpl extends GenericDaoImpl<Employee>{
             String employeeName = resultSet.getString(2);
 
             String positionIdStr = resultSet.getString("BIN_TO_UUID(position_id)");
-            UUID positionId = UUID.fromString(employeeIdStr);
+            UUID positionId = UUID.fromString(positionIdStr);
             String name = resultSet.getString("p.name");
             float basePay = resultSet.getFloat("p.base_pay");
             int daysOff = resultSet.getInt("p.days_off");
