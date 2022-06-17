@@ -1,5 +1,9 @@
 package com.borismilenski.museumis.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
@@ -7,12 +11,17 @@ import java.util.Set;
 import java.util.UUID;
 
 public class Schedule {
+    @NotNull
     private final LocalDate from;
+    @NotNull
     private final LocalDate to;
-    private final Set<UUID> employeeIDs = new HashSet<>();
+    @NotNull
     private final List<ScheduleSlot> slots;
+    private final Set<UUID> employeeIDs = new HashSet<>();
 
-    public Schedule(LocalDate from, LocalDate to, List<ScheduleSlot> slots) {
+    public Schedule(@JsonProperty("from") LocalDate from,
+                    @JsonProperty("to") LocalDate to,
+                    @JsonProperty("slots") List<ScheduleSlot> slots) {
         this.from = from;
         this.to = to;
         this.slots = slots;
@@ -21,7 +30,7 @@ public class Schedule {
     public Set<UUID> getEmployeeIDs() {
         if(employeeIDs.isEmpty()){
             slots.stream()
-                    .forEach((slot)->employeeIDs.add(slot.employee().getId()));
+                    .forEach((slot)->employeeIDs.add(slot.getEmployee().getId()));
         }
         return employeeIDs;
     }
