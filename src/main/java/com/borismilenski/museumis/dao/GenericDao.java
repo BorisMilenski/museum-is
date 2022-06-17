@@ -1,6 +1,5 @@
 package com.borismilenski.museumis.dao;
 
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

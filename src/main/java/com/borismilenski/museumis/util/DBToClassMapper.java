@@ -1,4 +1,4 @@
-package com.borismilenski.museumis.dao;
+package com.borismilenski.museumis.util;
 
 import com.borismilenski.museumis.model.Position;
 import org.springframework.jdbc.core.RowMapper;
