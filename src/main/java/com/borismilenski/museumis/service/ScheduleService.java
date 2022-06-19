@@ -1,35 +1,30 @@
 package com.borismilenski.museumis.service;
 
 import com.borismilenski.museumis.dao.EmployeeDaoImpl;
-import com.borismilenski.museumis.dao.PositionDaoImpl;
 import com.borismilenski.museumis.model.Employee;
-import com.borismilenski.museumis.model.Position;
+import com.borismilenski.museumis.model.Schedule;
+import com.borismilenski.museumis.model.ScheduleSlot;
 import com.google.ortools.sat.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
 public class ScheduleService {
     private final JdbcTemplate jdbcTemplate;
-
     private final int shiftLength = 4; //Shift duration in hours
-    final int numDays = 7;
-    final int numShifts = 2; //Number of shifts per day
+    private final int numDays = 7;
+    private final int numShifts = 2; //Number of shifts per day
 
     public ScheduleService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
-
-    final StringBuilder output = new StringBuilder();
-
-    public String createSchedule() {
+    public List<Schedule> createSchedules(int[][][] shiftRequests) {
         //Get all employees
         List<Employee> allEmployees = new EmployeeDaoImpl(jdbcTemplate).findAll();
 
@@ -39,57 +34,20 @@ public class ScheduleService {
                         Collectors.groupingBy(employee -> employee.getPosition().getName())
                 );
 
-        employeesByPosition.forEach(this::createScheduleForPosition);
-
-        return output.toString();
-
+        List<Schedule> allSchedules = new ArrayList<>();
+        employeesByPosition.forEach((positionName, employees)-> allSchedules.add(createScheduleForPosition(positionName, employees, shiftRequests)));
+        return allSchedules;
     }
 
-    private void createScheduleForPosition(String positionName, List<Employee> employeeList){
+    private Schedule createScheduleForPosition(String positionName, List<Employee> employeeList, int[][][] shiftRequests){
+        final StringBuilder output = new StringBuilder();
+        Schedule schedule = new Schedule(UUID.randomUUID(), LocalDate.now(), LocalDate.now(), new ArrayList<>());
+
         final int[] allEmployees = IntStream.range(0, employeeList.size()).toArray();
         final int[] allDays = IntStream.range(0, numDays).toArray();
         final int[] allShifts = IntStream.range(0, numShifts).toArray();
 
         int totalNumOfShifts = 0;
-
-        final int[][][] shiftRequests = new int[][][] {
-                {
-                        {0, 0},
-                        {0, 0},
-                        {0, 0},
-                        {0, 0},
-                        {0, 0},
-                        {0, 1},
-                        {0, 0},
-                },
-                {
-                        {0, 0},
-                        {0, 0},
-                        {0, 1},
-                        {0, 1},
-                        {1, 0},
-                        {0, 0},
-                        {0, 0},
-                },
-                {
-                        {0, 1},
-                        {0, 1},
-                        {0, 0},
-                        {1, 0},
-                        {0, 0},
-                        {0, 1},
-                        {0, 0},
-                },
-                {
-                        {0, 0},
-                        {0, 0},
-                        {1, 0},
-                        {0, 1},
-                        {0, 0},
-                        {1, 0},
-                        {0, 0},
-                }
-        };
 
         //Map employees to unique ints (necessary for setting the model)
         Map<Integer, Employee> indexedEmployee = employeeList.stream()
@@ -176,13 +134,14 @@ public class ScheduleService {
             output.append(String.format("Solution:%n"));
             for (int d : allDays) {
                 output.append(String.format("Day %d%n", d));
-                for (int n : allEmployees) {
+                for (int e : allEmployees) {
                     for (int s : allShifts) {
-                        if (solver.booleanValue(shifts[n][d][s])) {
-                            if (shiftRequests[n][d][s] == 1) {
-                                output.append(String.format("  Employee %d works shift %d (requested).%n", n, s));
+                        if (solver.booleanValue(shifts[e][d][s])) {
+                            schedule.getSlots().add(new ScheduleSlot(UUID.randomUUID(), LocalDateTime.of(2022, 6, 13+d, s==0? 9:14, 0, 0), LocalDateTime.of(2022, 6, 13+d, s==0? 13:18, 0, 0), indexedEmployee.get(e)));
+                            if (shiftRequests[e][d][s] == 1) {
+                                output.append(String.format("  %s %d works shift %d (requested).%n",positionName, e, s));
                             } else {
-                                output.append(String.format("  Employee %d works shift %d (not requested).%n", n, s));
+                                output.append(String.format("  %s %d works shift %d (not requested).%n",positionName, e, s));
                             }
                         }
                     }
@@ -198,7 +157,8 @@ public class ScheduleService {
         output.append(String.format("  branches : %d%n", solver.numBranches()));
         output.append(String.format("  wall time: %f s%n", solver.wallTime()));
 
-
+        System.out.println(output);
+        return schedule;
     }
 
 

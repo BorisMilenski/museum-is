@@ -1,7 +1,6 @@
 package com.borismilenski.museumis.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -11,6 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public class Schedule {
+    private final UUID id;
     @NotNull
     private final LocalDate from;
     @NotNull
@@ -19,9 +19,11 @@ public class Schedule {
     private final List<ScheduleSlot> slots;
     private final Set<UUID> employeeIDs = new HashSet<>();
 
-    public Schedule(@JsonProperty("from") LocalDate from,
+    public Schedule(@JsonProperty("scheduleId") UUID id,
+                    @JsonProperty("from") LocalDate from,
                     @JsonProperty("to") LocalDate to,
                     @JsonProperty("slots") List<ScheduleSlot> slots) {
+        this.id = id;
         this.from = from;
         this.to = to;
         this.slots = slots;
@@ -33,6 +35,10 @@ public class Schedule {
                     .forEach((slot)->employeeIDs.add(slot.getEmployee().getId()));
         }
         return employeeIDs;
+    }
+
+    public UUID getId() {
+        return id;
     }
 
     public LocalDate getFrom() {

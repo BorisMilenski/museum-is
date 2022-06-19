@@ -1,10 +1,13 @@
 package com.borismilenski.museumis.api;
 
+import com.borismilenski.museumis.model.Schedule;
 import com.borismilenski.museumis.service.ScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/schedule/test")
@@ -17,7 +20,44 @@ public class ScheduleController {
     }
 
     @GetMapping
-    public String getSchedule(){
-        return scheduleService.createSchedule();
+    public List<Schedule> getSchedule(){
+        return scheduleService.createSchedules(new int[][][]{
+                {
+                        {0, 0},
+                        {0, 0},
+                        {0, 0},
+                        {0, 0},
+                        {0, 0},
+                        {0, 1},
+                        {0, 0},
+                },
+                {
+                        {0, 0},
+                        {0, 0},
+                        {0, 1},
+                        {0, 1},
+                        {1, 0},
+                        {0, 0},
+                        {0, 0},
+                },
+                {
+                        {0, 1},
+                        {0, 1},
+                        {0, 0},
+                        {1, 0},
+                        {0, 0},
+                        {0, 1},
+                        {0, 0},
+                },
+                {
+                        {0, 0},
+                        {0, 0},
+                        {1, 0},
+                        {0, 1},
+                        {0, 0},
+                        {1, 0},
+                        {0, 0},
+                }
+        });
     }
 }
