@@ -30,32 +30,15 @@ public class ScheduleService {
     final StringBuilder output = new StringBuilder();
 
     public String createSchedule() {
-
-
-
         //Get all employees
         List<Employee> allEmployees = new EmployeeDaoImpl(jdbcTemplate).findAll();
 
         //Divide employees based on position
-        //Map employees to unique ints (necessary for setting the model)
         Map<String, List<Employee>> employeesByPosition =
                 allEmployees.stream().collect(
                         Collectors.groupingBy(employee -> employee.getPosition().getName())
                 );
 
-//        for(String positionName : allPositionsByName.keySet()){
-//            List<Employee> sorted = new ArrayList<>();
-//            employeesByPosition.add(
-//                    allEmployees.stream()
-//                    .filter((employee -> employee.getPosition().equals(positionName)))
-//                    .collect(HashMap::new,
-//                            (map, employee) -> {
-//                                map.put(map.size(), employee);
-//                                sorted.add(employee);
-//                                },
-//                            Map::putAll));
-//            allEmployees.removeAll(sorted);
-//        }
         employeesByPosition.forEach(this::createScheduleForPosition);
 
         return output.toString();
@@ -108,6 +91,7 @@ public class ScheduleService {
                 }
         };
 
+        //Map employees to unique ints (necessary for setting the model)
         Map<Integer, Employee> indexedEmployee = employeeList.stream()
                 .collect(HashMap::new,
                             (map, employee) -> map.put(map.size(), employee),
@@ -116,10 +100,10 @@ public class ScheduleService {
         CpModel model = new CpModel();
 
         Literal[][][] shifts = new Literal[allEmployees.length][numDays][numShifts];
-        for (int n : allEmployees) {
+        for (int e : allEmployees) {
             for (int d : allDays) {
                 for (int s : allShifts) {
-                    shifts[n][d][s] = model.newBoolVar("shifts_n" + n + "d" + d + "s" + s);
+                    shifts[e][d][s] = model.newBoolVar("shifts_n" + e + "d" + d + "s" + s);
                 }
             }
         }
@@ -128,19 +112,19 @@ public class ScheduleService {
         for (int d : allDays) {
             for (int s : allShifts) {
                 List<Literal> employees = new ArrayList<>();
-                for (int n : allEmployees) {
-                    employees.add(shifts[n][d][s]);
+                for (int e : allEmployees) {
+                    employees.add(shifts[e][d][s]);
                 }
                 model.addAtLeastOne(employees);
             }
         }
 
         // Each employee works between 0 and 2 shifts per day.
-        for (int n : allEmployees) {
+        for (int e : allEmployees) {
             for (int d : allDays) {
                 LinearExprBuilder work = LinearExpr.newBuilder();
                 for (int s : allShifts) {
-                    work.add(shifts[n][d][s]);
+                    work.add(shifts[e][d][s]);
                 }
                 model.addLessOrEqual(work,  2);
             }
@@ -150,8 +134,8 @@ public class ScheduleService {
         for (int d : allDays){
             for (int s : allShifts) {
                 LinearExprBuilder maxEmployeesPerShift = LinearExpr.newBuilder();
-                for (int n : allEmployees) {
-                    maxEmployeesPerShift.add(shifts[n][d][s]);
+                for (int e : allEmployees) {
+                    maxEmployeesPerShift.add(shifts[e][d][s]);
                 }
                 model.addLessOrEqual(maxEmployeesPerShift, 2);
             }
@@ -159,14 +143,14 @@ public class ScheduleService {
 
         //Each employee works a number of shifts determined by their position
         //An employee can be assigned at most one less shift than specified in their position
-        for (int n : allEmployees) {
+        for (int e : allEmployees) {
             LinearExprBuilder numShiftsWorked = LinearExpr.newBuilder();
-            int expectedShiftsPerEmployee = (indexedEmployee.get(n).getPosition().getWorkHoursPerWeek() * numDays / 7) / shiftLength;
+            int expectedShiftsPerEmployee = (indexedEmployee.get(e).getPosition().getWorkHoursPerWeek() * numDays / 7) / shiftLength;
             totalNumOfShifts+=expectedShiftsPerEmployee;
             int minShiftsPerEmployee = expectedShiftsPerEmployee - 1;
             for (int d : allDays) {
                 for (int s : allShifts) {
-                    numShiftsWorked.add(shifts[n][d][s]);
+                    numShiftsWorked.add(shifts[e][d][s]);
                 }
             }
             model.addLinearConstraint(numShiftsWorked, minShiftsPerEmployee, expectedShiftsPerEmployee);
@@ -174,10 +158,10 @@ public class ScheduleService {
 
         //Optimize for fulfilling the highest number of shift requests
         LinearExprBuilder obj = LinearExpr.newBuilder();
-        for (int n : allEmployees) {
+        for (int e : allEmployees) {
             for (int d : allDays) {
                 for (int s : allShifts) {
-                    obj.addTerm(shifts[n][d][s], shiftRequests[n][d][s]);
+                    obj.addTerm(shifts[e][d][s], shiftRequests[e][d][s]);
                 }
             }
         }
