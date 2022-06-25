@@ -17,6 +17,6 @@ public class ScheduleSlotService extends GenericService<ScheduleSlot>{
     }
 
     public List<ScheduleSlot> findAllforEmployee(UUID id){
-        return ((SlotDao) genericDao).findAllforEmployee(id);
+        return ((SlotDao) this.getGenericDao()).findAllforEmployee(id);
     }
 }

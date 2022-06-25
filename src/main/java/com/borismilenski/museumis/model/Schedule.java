@@ -17,7 +17,6 @@ public class Schedule {
     private final LocalDate to;
     @NotNull
     private final List<ScheduleSlot> slots;
-    private final Set<UUID> employeeIDs = new HashSet<>();
 
     public Schedule(@JsonProperty("scheduleId") UUID id,
                     @JsonProperty("from") LocalDate from,
@@ -27,14 +26,6 @@ public class Schedule {
         this.from = from;
         this.to = to;
         this.slots = slots;
-    }
-
-    public Set<UUID> getEmployeeIDs() {
-        if(employeeIDs.isEmpty()){
-            slots.stream()
-                    .forEach((slot)->employeeIDs.add(slot.getEmployee().getId()));
-        }
-        return employeeIDs;
     }
 
     public UUID getId() {

@@ -46,7 +46,7 @@ public class PositionDaoImpl extends GenericDaoImpl<Position>{
                 " description, " +
                 " name) " +
                 "VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?)";
-        jdbcTemplate.update(
+        this.getJdbcTemplate().update(
                 sql,
                 position.getId().toString(),
                 position.getBasePay(),
@@ -69,7 +69,7 @@ public class PositionDaoImpl extends GenericDaoImpl<Position>{
                 "description = ?, " +
                 "name  = ?" +
                 "WHERE id_position = UUID_TO_BIN( ? )";
-        return jdbcTemplate.update(
+        return this.getJdbcTemplate().update(
                 sql,
                 position.getBasePay(),
                 position.getDaysOff(),

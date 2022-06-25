@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository("employeeDao")
@@ -15,6 +16,14 @@ public class EmployeeDaoImpl extends GenericDaoImpl<Employee>{
         super(jdbcTemplate);
     }
 
+    public Optional<Employee> find(String employeeWebNiceName) {
+        String selectQuery =  selectSingleInstanceSQL();
+        return this.getJdbcTemplate().query(
+                selectQuery.concat("WHERE e.website_nice_name = ?"),
+                new Object[]{employeeWebNiceName},
+                this.map()
+        ).stream().findFirst();
+    }
     @Override
     String selectSingleInstanceSQL() {
         return  selectAllInstancesSQL() +
@@ -27,6 +36,7 @@ public class EmployeeDaoImpl extends GenericDaoImpl<Employee>{
                 "SELECT " +
                 "BIN_TO_UUID(id_employee), " +
                 "e.name, " +
+                "e.website_nice_name, " +
                 "BIN_TO_UUID(position_id), " +
                 "p.base_pay, " +
                 "p.days_off, " +
@@ -53,7 +63,8 @@ public class EmployeeDaoImpl extends GenericDaoImpl<Employee>{
         return (resultSet, i) -> {
             String employeeIdStr = resultSet.getString("BIN_TO_UUID(id_employee)");
             UUID employeeId = UUID.fromString(employeeIdStr);
-            String employeeName = resultSet.getString(2);
+            String employeeName = resultSet.getString("e.name");
+            String employeeWebNiceName = resultSet.getString("e.website_nice_name");
 
             String positionIdStr = resultSet.getString("BIN_TO_UUID(position_id)");
             UUID positionId = UUID.fromString(positionIdStr);
@@ -66,6 +77,7 @@ public class EmployeeDaoImpl extends GenericDaoImpl<Employee>{
             return new Employee(
                     employeeId,
                     employeeName,
+                    employeeWebNiceName,
                     new Position(
                             positionId,
                             name,
