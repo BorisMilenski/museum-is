@@ -17,9 +17,9 @@ public class EmployeeDaoImpl extends GenericDaoImpl<Employee>{
     }
 
     public Optional<Employee> find(String employeeWebNiceName) {
-        String selectQuery =  selectSingleInstanceSQL();
+        String selectQuery =  selectAllInstancesSQL().concat("WHERE e.website_nice_name = ?");
         return this.getJdbcTemplate().query(
-                selectQuery.concat("WHERE e.website_nice_name = ?"),
+                selectQuery,
                 new Object[]{employeeWebNiceName},
                 this.map()
         ).stream().findFirst();
@@ -42,7 +42,9 @@ public class EmployeeDaoImpl extends GenericDaoImpl<Employee>{
                 "p.days_off, " +
                 "p.base_workload, " +
                 "p.description, " +
-                "p.name " +
+                "p.name, " +
+                "p.max_on_shift, " +
+                "p.can_work_less_hours " +
                 "FROM employees AS e " +
                 "LEFT JOIN position AS p " +
                 "ON position_id=id_position ";
@@ -73,6 +75,8 @@ public class EmployeeDaoImpl extends GenericDaoImpl<Employee>{
             int daysOff = resultSet.getInt("p.days_off");
             int workHoursPerWeek = resultSet.getInt("p.base_workload");
             String description = resultSet.getString("p.description");
+            int maxOnShift = resultSet.getInt("p.max_on_shift");
+            boolean canWorkLessHours = resultSet.getBoolean("p.can_work_less_hours");
 
             return new Employee(
                     employeeId,
@@ -84,7 +88,9 @@ public class EmployeeDaoImpl extends GenericDaoImpl<Employee>{
                             basePay,
                             daysOff,
                             workHoursPerWeek,
-                            description)
+                            description,
+                            maxOnShift,
+                            canWorkLessHours)
             );
         };
     }

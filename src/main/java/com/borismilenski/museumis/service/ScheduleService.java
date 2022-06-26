@@ -6,7 +6,6 @@ import com.borismilenski.museumis.model.Employee;
 import com.borismilenski.museumis.model.Schedule;
 import com.borismilenski.museumis.model.ScheduleSlot;
 import com.google.ortools.sat.*;
-import org.apache.tomcat.jni.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -93,24 +92,24 @@ public class ScheduleService extends GenericService<Schedule>{
             }
         }
 
-        //Every day there are at most 2 employees per shift
+        //Every day there are at most as many employees per shift as determined in their position description
         for (int d : allDays){
             for (int s : allShifts) {
                 LinearExprBuilder maxEmployeesPerShift = LinearExpr.newBuilder();
                 for (int e : allEmployees) {
                     maxEmployeesPerShift.add(shifts[e][d][s]);
                 }
-                model.addLessOrEqual(maxEmployeesPerShift, 2);
+                model.addLessOrEqual(maxEmployeesPerShift, indexedEmployee.get(0).getPosition().getMaxOnShift());
             }
         }
 
         //Each employee works a number of shifts determined by their position
-        //An employee can be assigned at most one less shift than specified in their position
+        //An employee can be assigned fewer shifts only if allowed by his contract
         for (int e : allEmployees) {
             LinearExprBuilder numShiftsWorked = LinearExpr.newBuilder();
             int expectedShiftsPerEmployee = (indexedEmployee.get(e).getPosition().getWorkHoursPerWeek() * numDays / 7) / shiftLength;
             totalNumOfShifts+=expectedShiftsPerEmployee;
-            int minShiftsPerEmployee = expectedShiftsPerEmployee - 1;
+            int minShiftsPerEmployee = (indexedEmployee.get(e).getPosition().isCanWorkLessHours())? 0: expectedShiftsPerEmployee;
             for (int d : allDays) {
                 for (int s : allShifts) {
                     numShiftsWorked.add(shifts[e][d][s]);
@@ -121,16 +120,22 @@ public class ScheduleService extends GenericService<Schedule>{
 
         //Optimize for fulfilling the highest number of shift requests
         LinearExprBuilder obj = LinearExpr.newBuilder();
-        if (shiftRequests.length > 0) {
-            for (int e : allEmployees) {
-                for (int d : allDays) {
-                    for (int s : allShifts) {
+
+        for (int e : allEmployees) {
+            for (int d : allDays) {
+                for (int s : allShifts) {
+                    //If there are shift requests, optimize based on their values, otherwise assume all shifts are ok with the employees
+                    if (shiftRequests.length > 0){
                         obj.addTerm(shifts[e][d][s], shiftRequests[e][d][s]);
                     }
+                    else {
+                        obj.addTerm(shifts[e][d][s], 1);
+                    }
+
                 }
             }
-            model.maximize(obj);
         }
+        model.maximize(obj);
 
         CpSolver solver = new CpSolver();
         solver.getParameters().setLinearizationLevel(0);
@@ -150,10 +155,12 @@ public class ScheduleService extends GenericService<Schedule>{
                             LocalDateTime to = LocalDate.now().with(WeekFields.of(Locale.UK).dayOfWeek(), d + 1).atTime(s==0? 13:18, 0, 0);
                             ScheduleSlot slot = new ScheduleSlot(UUID.randomUUID(), from, to, indexedEmployee.get(e));
                             schedule.getSlots().add(slot);
-                            if (shiftRequests[e][d][s] == 1) {
-                                output.append(String.format("  %s %d works shift %d (requested).%n",positionName, e, s));
-                            } else {
-                                output.append(String.format("  %s %d works shift %d (not requested).%n",positionName, e, s));
+                            if (shiftRequests.length > 0) {
+                                if (shiftRequests[e][d][s] == 1) {
+                                    output.append(String.format("  %s %d works shift %d (requested).%n", positionName, e, s));
+                                } else {
+                                    output.append(String.format("  %s %d works shift %d (not requested).%n", positionName, e, s));
+                                }
                             }
                         }
                     }
@@ -179,6 +186,27 @@ public class ScheduleService extends GenericService<Schedule>{
         //If the schedules is empty, aka it hasn't been generated for the selected period, create it, send it to the DAO for persistence and return it to the caller
         if (schedule.isEmpty()){
             schedule = Optional.of(this.getGenericDao().create(this.createSchedules(from, to, scheduleRequests)));
+        }
+        return schedule;
+    }
+
+    public Optional<Schedule> getScheduleForEmployee(UUID employeeId, LocalDate from, LocalDate to, int[][][] scheduleRequests){
+        //Get the schedule from the DAO
+        Optional<Schedule> schedule = ((ScheduleDao)this.getGenericDao()).find(employeeId, from, to);
+        //If the schedules is empty, aka it hasn't been generated for the selected period, create it, send it to the DAO for persistence and return it to the caller
+        if(schedule.isEmpty()) {
+            this.getGenericDao().create(this.createSchedules(from, to, scheduleRequests));
+            schedule = ((ScheduleDao) this.getGenericDao()).find(employeeId, from, to);
+        }
+        return schedule;
+    }
+
+    public Optional<Schedule> getScheduleForEmployee(String employeeWebNiceName,LocalDate from, LocalDate to, int[][][] scheduleRequests){
+        //Get the schedule from the DAO
+        Optional<Schedule> schedule = ((ScheduleDao)this.getGenericDao()).find(employeeWebNiceName, from, to);
+        if(schedule.isEmpty()) {
+            this.getGenericDao().create(this.createSchedules(from, to, scheduleRequests));
+            schedule = ((ScheduleDao) this.getGenericDao()).find(employeeWebNiceName, from, to);
         }
         return schedule;
     }

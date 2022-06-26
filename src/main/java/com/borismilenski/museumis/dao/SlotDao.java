@@ -30,7 +30,8 @@ public class SlotDao extends GenericDaoImpl<ScheduleSlot>{
                 " WHERE " +
                         "DATE(time_start) BETWEEN ? AND ? " +
                         "AND " +
-                        "DATE(time_end) BETWEEN ? AND ?");
+                        "DATE(time_end) BETWEEN ? AND ? " +
+                        "ORDER BY time_start ASC ");
         return this.getJdbcTemplate().query(
                 selectQuery,
                 new Object[]{from, to, from, to},

@@ -55,7 +55,7 @@ public final class Employee {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Employee employee = (Employee) o;
-        return getId().equals(employee.getId()) && getName().equals(employee.getName()) && getPosition().equals(employee.getPosition()) && Objects.equals(getWebNiceName(), employee.getWebNiceName());
+        return Objects.equals(getId(), employee.getId());
     }
 
     @Override

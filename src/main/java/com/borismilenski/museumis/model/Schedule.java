@@ -17,7 +17,6 @@ public class Schedule {
     private final LocalDate to;
     @NotNull
     private final List<ScheduleSlot> slots;
-
     public Schedule(@JsonProperty("scheduleId") UUID id,
                     @JsonProperty("from") LocalDate from,
                     @JsonProperty("to") LocalDate to,
@@ -27,19 +26,15 @@ public class Schedule {
         this.to = to;
         this.slots = slots;
     }
-
     public UUID getId() {
         return id;
     }
-
     public LocalDate getFrom() {
         return from;
     }
-
     public LocalDate getTo() {
         return to;
     }
-
     public List<ScheduleSlot> getSlots() {
         return slots;
     }
