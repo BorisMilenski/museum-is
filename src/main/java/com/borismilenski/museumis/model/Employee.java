@@ -14,20 +14,23 @@ public final class Employee {
     @NotBlank
     private final String name;
     @NotNull
-
     private final Position position;
+    private final String webNiceName;
 
     public Employee(@JsonProperty("id") UUID id,
                     @JsonProperty("name") String name,
+                    @JsonProperty("webNiceName") String webNiceName,
                     @JsonProperty("position") Position position) {
         this.id = id;
         this.name = name;
+        this.webNiceName = webNiceName;
         this.position = position;
     }
 
     public Employee(UUID id, Employee employee) {
         this.id = id;
         this.name = employee.getName();
+        this.webNiceName = employee.getWebNiceName();
         this.position = employee.getPosition();
     }
     public UUID getId() {
@@ -42,27 +45,31 @@ public final class Employee {
         return position;
     }
 
+
+    public String getWebNiceName() {
+        return webNiceName;
+    }
+
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-        if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (Employee) obj;
-        return Objects.equals(this.id, that.id) &&
-                Objects.equals(this.name, that.name) &&
-                Objects.equals(this.position, that.position);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Employee employee = (Employee) o;
+        return Objects.equals(getId(), employee.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, position);
+        return Objects.hash(getId(), getName(), getPosition(), getWebNiceName());
     }
 
     @Override
     public String toString() {
-        return "Employee[" +
-                "id=" + id + ", " +
-                "name=" + name + ", " +
-                "position=" + position + ']';
+        return "Employee{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", position=" + position +
+                ", webNiceName='" + webNiceName + '\'' +
+                '}';
     }
-
 }

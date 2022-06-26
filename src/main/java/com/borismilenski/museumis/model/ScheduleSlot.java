@@ -29,19 +29,15 @@ public final class ScheduleSlot {
     public UUID getId() {
         return id;
     }
-
     public LocalDateTime getFrom() {
         return from;
     }
-
     public LocalDateTime getTo() {
         return to;
     }
-
     public Employee getEmployee() {
         return employee;
     }
-
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
@@ -57,7 +53,6 @@ public final class ScheduleSlot {
     public int hashCode() {
         return Objects.hash(id, from, to, employee);
     }
-
     @Override
     public String toString() {
         return "ScheduleSlot[" +

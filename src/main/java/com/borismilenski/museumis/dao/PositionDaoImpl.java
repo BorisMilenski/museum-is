@@ -5,10 +5,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import javax.swing.text.html.Option;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository("positionDao")
@@ -31,7 +27,9 @@ public class PositionDaoImpl extends GenericDaoImpl<Position>{
                 " days_off, " +
                 " base_workload, " +
                 " description, " +
-                " name " +
+                " name, " +
+                " max_on_shift, " +
+                " can_work_less_hours " +
                 " FROM position ";
     }
 
@@ -46,7 +44,7 @@ public class PositionDaoImpl extends GenericDaoImpl<Position>{
                 " description, " +
                 " name) " +
                 "VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?)";
-        jdbcTemplate.update(
+        this.getJdbcTemplate().update(
                 sql,
                 position.getId().toString(),
                 position.getBasePay(),
@@ -69,7 +67,7 @@ public class PositionDaoImpl extends GenericDaoImpl<Position>{
                 "description = ?, " +
                 "name  = ?" +
                 "WHERE id_position = UUID_TO_BIN( ? )";
-        return jdbcTemplate.update(
+        return this.getJdbcTemplate().update(
                 sql,
                 position.getBasePay(),
                 position.getDaysOff(),
@@ -91,6 +89,9 @@ public class PositionDaoImpl extends GenericDaoImpl<Position>{
             int daysOff = resultSet.getInt("days_off");
             int workHoursPerWeek = resultSet.getInt("base_workload");
             String description = resultSet.getString("description");
+            int maxOnShift = resultSet.getInt("max_on_shift");
+            boolean canWorkLessHours = resultSet.getBoolean("can_work_less_hours");
+
 
             return new Position(
                     positionId,
@@ -98,7 +99,9 @@ public class PositionDaoImpl extends GenericDaoImpl<Position>{
                     basePay,
                     daysOff,
                     workHoursPerWeek,
-                    description
+                    description,
+                    maxOnShift,
+                    canWorkLessHours
             );
         };
     }

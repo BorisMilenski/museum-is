@@ -8,7 +8,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public abstract class GenericDaoImpl<T> implements GenericDao<T>, DBToClassMapper<T> {
-    protected final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
+
+    public JdbcTemplate getJdbcTemplate() {
+        return jdbcTemplate;
+    }
 
     public GenericDaoImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;

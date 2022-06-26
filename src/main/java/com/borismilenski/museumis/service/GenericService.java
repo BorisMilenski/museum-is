@@ -8,7 +8,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public abstract class GenericService<T> {
-    protected final GenericDaoImpl<T> genericDao;
+    private final GenericDaoImpl<T> genericDao;
+
+    public GenericDaoImpl<T> getGenericDao() {
+        return genericDao;
+    }
 
     protected GenericService(GenericDaoImpl<T> genericDao) {
         this.genericDao = genericDao;
