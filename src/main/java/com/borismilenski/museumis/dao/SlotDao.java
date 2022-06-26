@@ -54,18 +54,7 @@ public class SlotDao extends GenericDaoImpl<ScheduleSlot>{
 
     @Override
     public int update(ScheduleSlot scheduleSlot) {
-        String sql = "UPDATE schedule SET " +
-                "employee_id = UUID_TO_BIN( ? ), " +
-                "time_start = ?, " +
-                "time_end = ?, " +
-                "WHERE BIN_TO_UUID(id_schedule) = ? ";
-        return this.getJdbcTemplate().update(
-                sql,
-                scheduleSlot.getEmployee().getId(),
-                scheduleSlot.getFrom(),
-                scheduleSlot.getTo(),
-                scheduleSlot.getId()
-        );
+        return 1;
     }
     @Override
     String selectSingleInstanceSQL() {
